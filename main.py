@@ -1,7 +1,16 @@
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
-from . import api, database, models
+import api, database, models
 
-app = FastAPI()
+app = FastAPI(title="TibetSwap Analytics API", description="Analytics for TibetSwap v1", version="1.0.0")
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Create database tables
 database.Base.metadata.create_all(bind=database.engine)
