@@ -5,7 +5,7 @@ import os, models
 
 DATABASE_URL = "sqlite:///./database.db"
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
@@ -14,7 +14,7 @@ def init_db():
     session = SessionLocal()
 
     # Create database tables
-    Base.metadata.create_all(bind=engine, connect_args={"check_same_thread": False})
+    Base.metadata.create_all(bind=engine)
 
     # Check if a router object exists, and if not, create one
     router_exists = session.query(models.Router).first()
