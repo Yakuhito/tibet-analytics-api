@@ -27,17 +27,25 @@ async def router_and_pairs_sync_task():
         current_router = await api.get_router(db)
         new_router, new_pairs = await sync.sync_router(current_router)
         if new_router is not None:
-            pass
-            # todo: save new router, insert new pairs
+            db.commit()
+            db.refresh(new_router)
+        
+        for new_pair in new_pairs:
+            db.insert(new_pair)
+            db.commit()
 
         all_current_pairs = await api.get_pairs(db)
         for current_pair in all_current_pairs:
             new_pair, new_transactions = await sync.sync_pair(current_pair)
             if new_pair is not None:
-                pass
-                # todo: save new pair, insert new transactions
+                db.commit()
+                db.refresh(new_pair)
+            
+            for new_tx in new_transactions:
+                db.insert(new_tx)
+                db.commit()
 
-        await asyncio.sleep(60)  # Wait for 60 seconds
+        await asyncio.sleep(60)  # Wait for 1 minute
 
 @app.on_event("startup")
 async def startup_event():
