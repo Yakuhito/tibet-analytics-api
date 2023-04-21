@@ -21,7 +21,8 @@ database.init_db()
 app.include_router(api.app)
 
 # sync task
-async def router_and_pairs_sync_task(db: Session = Depends(api.get_db)):
+async def router_and_pairs_sync_task():
+    db: Session = database.SessionLocal()
     while True:
         current_router = await api.get_router(db)
         new_router, new_pairs = await sync.sync_router(current_router)
