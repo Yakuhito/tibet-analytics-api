@@ -14,7 +14,7 @@ def init_db():
     session = SessionLocal()
 
     # Create database tables
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine, connect_args={"check_same_thread": False})
 
     # Check if a router object exists, and if not, create one
     router_exists = session.query(models.Router).first()
