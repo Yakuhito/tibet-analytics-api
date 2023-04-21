@@ -46,3 +46,7 @@ async def get_transactions(pair_launcher_id: str, limit: int = 10, offset: int =
         .all()
     )
     return transactions
+
+@app.get("/")
+async def root():
+    return {"message": "TibetSwap Analytics API is running"}
