@@ -24,6 +24,7 @@ class Pair(database.Base):
     xch_reserve = Column(BigInteger)
     token_reserve = Column(BigInteger)
     liquidity = Column(BigInteger)
+    trade_volume = Column(BigInteger, default=0)
 
 class Transaction(database.Base):
     __tablename__ = 'transactions'
