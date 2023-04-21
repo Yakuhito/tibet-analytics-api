@@ -7,7 +7,6 @@ class Router(database.Base):
 
     launcher_id = Column(String(64), primary_key=True, unique=True)
     current_coin_id = Column(String(64))
-    current_height = Column(BigInteger)
     network = Column(String)
 
 class Pair(database.Base):

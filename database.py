@@ -22,7 +22,6 @@ def init_db():
         router = models.Router(
             launcher_id=os.environ.get("TIBET_LAUNCHER_ID"),
             current_coin_id=os.environ.get("TIBET_LAUNCHER_ID"),
-            current_height=int(os.environ.get("TIBET_CURRENT_HEIGHT")),
             network=os.environ.get("TIBET_NETWORK")
         )
         session.add(router)
