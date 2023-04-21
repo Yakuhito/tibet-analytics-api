@@ -18,16 +18,6 @@ def get_db():
 @app.get("/router")
 async def get_router(db: Session = Depends(get_db)):
     router = db.query(models.Router).first()
-    if not router:
-        router = models.Router(
-            launcher_id=os.environ.get("TIBET_LAUNCHER_ID"),
-            current_coin_id=os.environ.get("TIBET_CURRENT_COIN_ID"),
-            current_height=int(os.environ.get("TIBET_CURRENT_HEIGHT")),
-            network=os.environ.get("TIBET_NETWORK"),
-        )
-        db.add(router)
-        db.commit()
-        db.refresh(router)
     return router
 
 @app.get("/pairs")
@@ -36,7 +26,7 @@ async def get_pairs(db: Session = Depends(get_db)):
     return pairs
 
 @app.get("/transactions")
-async def get_transactions(pair_launcher_id: str, limit: int = 10, offset: int = 0, db: Session = Depends(get_db)):
+async def get_transactions(pair_launcher_id: str, limit: int = 42, offset: int = 0, db: Session = Depends(get_db)):
     transactions = (
         db.query(models.Transaction)
         .filter(models.Transaction.pair_launcher_id == pair_launcher_id)

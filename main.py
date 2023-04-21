@@ -13,7 +13,7 @@ app.add_middleware(
 )
 
 # Create database tables
-database.Base.metadata.create_all(bind=database.engine)
+database.init_db()
 
 # Include the API router
 app.include_router(api.app)

@@ -1,9 +1,8 @@
 from sqlalchemy import Column, String, Integer, BigInteger, Boolean, JSON
 from sqlalchemy.ext.declarative import declarative_base
+import database
 
-Base = declarative_base()
-
-class Router(Base):
+class Router(database.Base):
     __tablename__ = 'router'
 
     launcher_id = Column(String(64), primary_key=True, unique=True)
@@ -11,7 +10,7 @@ class Router(Base):
     current_height = Column(BigInteger)
     network = Column(String)
 
-class Pair(Base):
+class Pair(database.Base):
     __tablename__ = 'pairs'
 
     launcher_id = Column(String(64), primary_key=True, unique=True)
@@ -26,7 +25,7 @@ class Pair(Base):
     token_reserve = Column(BigInteger)
     liquidity = Column(BigInteger)
 
-class Transaction(Base):
+class Transaction(database.Base):
     __tablename__ = 'transactions'
 
     coin_id = Column(String(64), primary_key=True, unique=True)
