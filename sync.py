@@ -2,6 +2,7 @@ from chia.wallet.puzzles.singleton_top_layer_v1_1 import SINGLETON_LAUNCHER_HASH
 from chia.util.condition_tools import conditions_dict_for_solution
 from chia.types.blockchain_format.program import INFINITE_COST
 from chia.types.condition_opcodes import ConditionOpcode
+from chia.types.blockchain_format.program import Program
 from leaflet_client import LeafletFullNodeRpcClient
 from chia.types.blockchain_format.coin import Coin
 from typing import List
@@ -73,7 +74,7 @@ async def sync_router(router: models.Router) -> [models.Router, List[models.Pair
         return None, []
 
     while router_coin_record.spent:
-        print(f"Processing spend {current_router_coin_id.coin()}...")
+        print(f"Processing router coin spend {current_router_coin_id.hex()}...")
         creation_spend = await client.get_puzzle_and_solution(
             current_router_coin_id,
             router_coin_record.spent_block_index
@@ -86,10 +87,10 @@ async def sync_router(router: models.Router) -> [models.Router, List[models.Pair
         )
 
         tail_hash = None
-        print(f"New pair for asset id 0x{tail_hash.hex()}")
         if router_coin_record.coin.puzzle_hash != SINGLETON_LAUNCHER_HASH:
             solution_program = creation_spend.solution.to_program()
             tail_hash = [_ for _ in solution_program.as_iter()][-1].as_python()[-1]
+            print(f"New pair for asset id 0x{tail_hash.hex()}")
 
         for cwa in conditions_dict[ConditionOpcode.CREATE_COIN]:
             new_puzzle_hash = cwa.vars[0]
@@ -115,6 +116,15 @@ async def sync_router(router: models.Router) -> [models.Router, List[models.Pair
     router.current_coin_id = current_router_coin_id.hex()
     return router, new_pairs
 
+def state_to_xch_reserve(state: Program) -> int:
+    return state.at("rf").as_int()
+
+def state_to_token_reserve(state: Program) -> int:
+    return state.at("rr").as_int()
+
+def state_to_liquidity(state: Program) -> int:
+    return state.at("f").as_int()
+
 def create_new_transaction(
     coin_id: str,
     pair_coin_id: str,
@@ -122,12 +132,20 @@ def create_new_transaction(
     new_state: Program,
     height: int
 ) -> [models.Transaction, int]:
-    operation = "UNKNOWN"
     state_change = {
-        "xch": new_state.at("rf").as_int() - old_state.at("rf").as_int(),
-        "token": new_state.at("rr").as_int() - old_state.at("rr").as_int(),
-        "liquidity": new_state.at("f").as_int() - old_state.at("f").as_int(),
+        "xch": state_to_xch_reserve(new_state) - state_to_xch_reserve(old_state),
+        "token": state_to_token_reserve(new_state) - state_to_token_reserve(old_state),
+        "liquidity": state_to_liquidity(new_state) - state_to_liquidity(old_state),
     }
+
+    operation = None
+    if state_change["liquidity"] == 0:
+        operation = "SWAP"
+    else:
+        if state_change["liquidity"] > 0:
+            operation = "ADD_LIQUIDITY"
+        else:
+            operation = "REMOVE_LIQUIDITY"
 
     tx = models.Transaction(
         coin_id = coin_id,
@@ -139,19 +157,11 @@ def create_new_transaction(
     volume = abs(state_change["xch"]) * 2
     return tx, volume
 
-tx, volume = create_new_transaction(
-            current_pair_coin_id.hex(),
-            pair.launcher_id,
-            old_state, new_state,
-            coin_record.spent_block_index
-        )
-        new_transactions.append(tx)
-
 async def sync_pair(pair: models.Pair) -> [models.Pair, List[models.Transaction]]:
     new_transactions = []
     
     current_pair_coin_id = bytes.fromhex(pair.current_coin_id)
-    coin_record = await client.get_coin_record_by_name(last_synced_coin_id)
+    coin_record = await client.get_coin_record_by_name(current_pair_coin_id)
 
     if coin_record.coin.puzzle_hash == SINGLETON_LAUNCHER_HASH:
         creation_spend = await client.get_puzzle_and_solution(current_pair_coin_id, coin_record.spent_block_index)
@@ -168,7 +178,9 @@ async def sync_pair(pair: models.Pair) -> [models.Pair, List[models.Transaction]
     if not coin_record.spent:
         return None, []
 
+    new_state = None
     while coin_record.spent:
+        print(f"Processing pair coin spend {current_pair_coin_id.hex()}...")
         creation_spend = await client.get_puzzle_and_solution(current_pair_coin_id, coin_record.spent_block_index)
         _, conditions_dict, __ = conditions_dict_for_solution(
             creation_spend.puzzle_reveal,
@@ -197,10 +209,11 @@ async def sync_pair(pair: models.Pair) -> [models.Pair, List[models.Transaction]
             current_pair_coin_id.hex(),
             pair.launcher_id,
             old_state, new_state,
-            coin_record.spent_block_index
+            coin_record.spent_block_index,
         )
         new_transactions.append(tx)
-        pair.volume = int(pair.volume) + volume
+        pair.trade_volume = int(pair.trade_volume) + volume
+        print(f"Volume of tx: {volume / 10 ** 12} XCH")
 
         for cwa in conditions_dict.get(ConditionOpcode.CREATE_COIN, []):
             new_puzzle_hash = cwa.vars[0]
@@ -209,7 +222,10 @@ async def sync_pair(pair: models.Pair) -> [models.Pair, List[models.Transaction]
             if new_amount == b"\x01": # CREATE_COIN with amount=1 -> pair recreation
                 current_pair_coin_id = Coin(current_pair_coin_id, new_puzzle_hash, 1).name()
 
-        coin_record = await full_node_client.get_coin_record_by_name(current_pair_coin_id)
+        coin_record = await client.get_coin_record_by_name(current_pair_coin_id)
 
+    pair.xch_reserve = state_to_xch_reserve(new_state)
+    pair.token_reserve = state_to_token_reserve(new_state)
+    pair.liquidity = state_to_liquidity(new_state)
     pair.current_coin_id = current_pair_coin_id.hex()
     return pair, new_transactions
