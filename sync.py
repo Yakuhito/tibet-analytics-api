@@ -1,5 +1,6 @@
 from leaflet_client import LeafletFullNodeRpcClient
 from typing import List
+import requests
 import models
 import sys
 import os
@@ -27,7 +28,35 @@ def ensure_client():
 
 
 def create_new_pair(asset_id: str, launcher_id: str) -> models.Pair:
-    pass
+    name = f"CAT 0x{asset_id[:8]}"
+    short_name = "???"
+    image_url = "https://bafybeigzcazxeu7epmm4vtkuadrvysv74lbzzbl2evphtae6k57yhgynp4.ipfs.dweb.link/9098.gif"
+
+    try:
+        url = os.environ.get("TAILDATABASE_TAIL_INFO_URL") + asset_id
+        resp = requests.get(url)
+        j = resp.json()
+        if j.get("error") == "Not found":
+            raise Exception("TailDatabase: Asset id not found")
+
+        name = j["name"]
+        short_name = j["code"]
+        image_url = j["nft_uri"]
+    except:
+        pass
+
+    return models.Pair(
+        launcher_id = launcher_id,
+        name = name,
+        short_name = short_name,
+        image_url = image_url,
+        asset_id = asset_id,
+        current_coin_id = launcher_id,
+        xch_reserve = 0,
+        token_reserve = 0,
+        liquidity = 0,
+        trade_volume = 0,
+    )
 
 
 async def sync_router(router: models.Router) -> [models.Router, List[models.Pair]]:

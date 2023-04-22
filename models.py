@@ -16,7 +16,6 @@ class Pair(database.Base):
     name = Column(String)
     short_name = Column(String)
     image_url = Column(String)
-    verified = Column(Boolean)
     asset_id = Column(String(64))
     current_coin_id = Column(String(64))
     xch_reserve = Column(BigInteger)
