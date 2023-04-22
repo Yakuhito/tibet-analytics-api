@@ -1,8 +1,12 @@
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
+from dotenv import load_dotenv
+
 import api, database, models, sync
 import asyncio
+
+load_dotenv()
 
 app = FastAPI(title="TibetSwap Analytics API", description="Analytics for TibetSwap v1", version="1.0.0")
 
