@@ -5,8 +5,10 @@ from dotenv import load_dotenv
 
 import api, database, models, sync
 import asyncio
+import os
 
-load_dotenv()
+if os.environ.get("TIBET_NETWORK") is None:
+    load_dotenv()
 
 app = FastAPI(title="TibetSwap Analytics API", description="Analytics for TibetSwap v1", version="1.0.0")
 
@@ -26,6 +28,8 @@ app.include_router(api.app)
 
 # sync task
 async def router_and_pairs_sync_task():
+    sync.ensure_client()
+
     db: Session = database.SessionLocal()
     while True:
         current_router = await api.get_router(db)
