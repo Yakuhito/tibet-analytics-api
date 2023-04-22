@@ -21,7 +21,7 @@ class Pair(database.Base):
     xch_reserve = Column(BigInteger)
     token_reserve = Column(BigInteger)
     liquidity = Column(BigInteger)
-    trade_volume = Column(BigInteger, default=0)
+    trade_volume = Column(String, default="0")
 
 class Transaction(database.Base):
     __tablename__ = 'transactions'
@@ -29,6 +29,5 @@ class Transaction(database.Base):
     coin_id = Column(String(64), primary_key=True, unique=True)
     pair_launcher_id = Column(String(64))
     operation = Column(String)
-    input = Column(JSON)
-    output = Column(JSON)
+    state_change = Column(JSON)
     height = Column(BigInteger)
