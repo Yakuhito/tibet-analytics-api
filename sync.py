@@ -10,6 +10,8 @@ async def ensure_cleint():
     if client is not None:
         return
 
+    network = 
+
 async def sync_router(router: models.Router) -> [models.Router, List[models.Pair]]:
     print("sync_router", router)
     return None, []
