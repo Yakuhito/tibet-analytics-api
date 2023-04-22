@@ -39,7 +39,7 @@ async def router_and_pairs_sync_task():
             db.refresh(new_router)
         
         for new_pair in new_pairs:
-            db.insert(new_pair)
+            db.add(new_pair)
             db.commit()
 
         all_current_pairs = await api.get_pairs(db)
@@ -50,7 +50,7 @@ async def router_and_pairs_sync_task():
                 db.refresh(new_pair)
             
             for new_tx in new_transactions:
-                db.insert(new_tx)
+                db.add(new_tx)
                 db.commit()
 
         await asyncio.sleep(60)  # Wait for 1 minute
