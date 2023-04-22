@@ -25,7 +25,14 @@ async def get_pairs(db: Session = Depends(get_db)):
     pairs = db.query(models.Pair).all()
     return pairs
 
-@app.get("/transactions")
+@app.get("/pair/{pair_launcher_id}")
+async def get_pair(pair_launcher_id: str, db: Session = Depends(get_db)):
+    pair = db.query(models.Pair).filter(models.Pair.launcher_id == pair_launcher_id).first()
+    if pair is None:
+        raise HTTPException(status_code=404, detail="Pair not found")
+    return pair
+
+@app.get("/transactions/{pair_launcher_id}")
 async def get_transactions(pair_launcher_id: str, limit: int = 42, offset: int = 0, db: Session = Depends(get_db)):
     transactions = (
         db.query(models.Transaction)
