@@ -154,8 +154,8 @@ def create_new_transaction(
         state_change = state_change,
         height = height,
     )
-    volume = abs(state_change["xch"]) * 2
-    return tx, volume
+    trade_volume = abs(state_change["xch"]) * 2 if operation == "SWAP" else 0
+    return tx, trade_volume
 
 async def sync_pair(pair: models.Pair) -> [models.Pair, List[models.Transaction]]:
     new_transactions = []
