@@ -26,6 +26,9 @@ async def get_router(db: Session = Depends(get_db)):
 @cached(cache)
 @app.get("/pairs")
 async def get_pairs(db: Session = Depends(get_db)):
+    return await _get_pairs(db)
+
+async def _get_pairs(db: Session):
     pairs = db.query(models.Pair).all()
     return pairs
 

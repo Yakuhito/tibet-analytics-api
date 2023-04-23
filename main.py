@@ -42,7 +42,7 @@ async def router_and_pairs_sync_task():
             db.add(new_pair)
             db.commit()
 
-        all_current_pairs = await api.get_pairs(db)
+        all_current_pairs = await api._get_pairs(db)
         for current_pair in all_current_pairs:
             new_pair, new_transactions = await sync.sync_pair(current_pair)
             if new_pair is not None:
