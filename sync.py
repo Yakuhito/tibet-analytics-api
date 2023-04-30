@@ -196,11 +196,13 @@ async def sync_pair(pair: models.Pair) -> [models.Pair, List[models.Transaction]
         params = p2_merkle_solution.at("rrf").at("r")
 
         dummy_singleton_struct = (b"\x00" * 32, (b"\x00" * 32, b"\x00" * 32))
+        dummy_coin_id = b"\x00" * 32
 
         new_state_puzzle_sol = Program.to([
             old_state,
             params,
-            dummy_singleton_struct
+            dummy_singleton_struct,
+            dummy_coin_id
         ])
         new_state_puzzle_output = new_state_puzzle.run(new_state_puzzle_sol)
         new_state = new_state_puzzle_output.at("f")
