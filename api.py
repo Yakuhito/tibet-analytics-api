@@ -61,7 +61,14 @@ async def get_transactions(
     if limit > 420:
         raise HTTPException(status_code=400, detail="Limit cannot exceed 420")
 
-    query = db.query(models.Transaction)
+    # Perform an outer join between the Transaction and HeightToTimestamp tables
+    query = db.query(
+        models.Transaction, 
+        models.HeightToTimestamp.timestamp.label('timestamp')
+    ).outerjoin(
+        models.HeightToTimestamp,
+        models.Transaction.height == models.HeightToTimestamp.height
+    )
 
     if pair_launcher_id:
         query = query.filter(models.Transaction.pair_launcher_id == pair_launcher_id)
@@ -81,6 +88,19 @@ async def get_transactions(
         .offset(offset)
         .all()
     )
+
+    # Convert the result into a list of dictionaries
+    transactions = [
+        {
+            **t[0].__dict__, 
+            'timestamp': t[1] or 0
+        } 
+        for t in transactions
+    ]
+
+    # # Remove the '_sa_instance_state' key which is added by SQLAlchemy
+    # for transaction in transactions:
+    #     transaction.pop('_sa_instance_state', None)
 
     return transactions
 

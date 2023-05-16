@@ -130,7 +130,7 @@ def create_new_transaction(
     pair_coin_id: str,
     old_state: Program,
     new_state: Program,
-    height: int
+    height: int,
 ) -> [models.Transaction, int]:
     state_change = {
         "xch": state_to_xch_reserve(new_state) - state_to_xch_reserve(old_state),
@@ -154,11 +154,16 @@ def create_new_transaction(
         state_change = state_change,
         height = height,
     )
+
     trade_volume = abs(state_change["xch"]) if operation == "SWAP" else 0
     return tx, trade_volume
 
-async def sync_pair(pair: models.Pair) -> [models.Pair, List[models.Transaction]]:
+async def sync_pair(
+    pair: models.Pair,
+    check_if_height_exists
+) -> [models.Pair, List[models.Transaction], List[models.HeightToTimestamp]]:
     new_transactions = []
+    new_heights = []
     
     current_pair_coin_id = bytes.fromhex(pair.current_coin_id)
     coin_record = await client.get_coin_record_by_name(current_pair_coin_id)
@@ -176,7 +181,7 @@ async def sync_pair(pair: models.Pair) -> [models.Pair, List[models.Transaction]
         coin_record = await client.get_coin_record_by_name(current_pair_coin_id)
 
     if not coin_record.spent:
-        return None, []
+        return None, [], []
 
     new_state = None
     while coin_record.spent:
@@ -207,13 +212,23 @@ async def sync_pair(pair: models.Pair) -> [models.Pair, List[models.Transaction]
         new_state_puzzle_output = new_state_puzzle.run(new_state_puzzle_sol)
         new_state = new_state_puzzle_output.at("f")
 
+        height = coin_record.spent_block_index
         tx, volume = create_new_transaction(
             current_pair_coin_id.hex(),
             pair.launcher_id,
             old_state, new_state,
-            coin_record.spent_block_index,
+            height
         )
         new_transactions.append(tx)
+
+        if not check_if_height_exists(height):
+            block_record = await client.get_block_record_by_height(height)
+            timestamp = block_record.timestamp if block_record is not None else None
+            new_heights.append(models.HeightToTimestamp(
+                height=height,
+                timestamp=int(timestamp if timestamp is not None else 0)
+            ))
+
         pair.trade_volume = int(pair.trade_volume) + volume
         print(f"Volume of tx: {volume / 10 ** 12} XCH")
 
@@ -230,4 +245,4 @@ async def sync_pair(pair: models.Pair) -> [models.Pair, List[models.Transaction]
     pair.token_reserve = state_to_token_reserve(new_state)
     pair.liquidity = state_to_liquidity(new_state)
     pair.current_coin_id = current_pair_coin_id.hex()
-    return pair, new_transactions
+    return pair, new_transactions, new_heights

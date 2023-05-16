@@ -31,3 +31,10 @@ class Transaction(database.Base):
     operation = Column(String)
     state_change = Column(JSON)
     height = Column(BigInteger)
+
+
+class HeightToTimestamp(database.Base):
+    __tablename__ = 'height_to_timestamp'
+
+    height = Column(BigInteger, primary_key=True, unique=True)
+    timestamp = Column(BigInteger)

@@ -26,6 +26,10 @@ database.init_db()
 # Include the API router
 app.include_router(api.app)
 
+shared_sess: Session = database.SessionLocal()
+def check_if_height_exists(height: int) -> bool:
+    return shared_sess.query(models.HeightToTimestamp).filter(models.HeightToTimestamp.height == height).first() is not None
+
 # sync task
 async def router_and_pairs_sync_task():
     sync.ensure_client()
@@ -44,13 +48,17 @@ async def router_and_pairs_sync_task():
 
         all_current_pairs = await api._get_pairs(db)
         for current_pair in all_current_pairs:
-            new_pair, new_transactions = await sync.sync_pair(current_pair)
+            new_pair, new_transactions, new_heights = await sync.sync_pair(current_pair, check_if_height_exists)
             if new_pair is not None:
                 db.commit()
                 db.refresh(new_pair)
             
             for new_tx in new_transactions:
                 db.add(new_tx)
+                db.commit()
+
+            for new_height in new_heights:
+                db.add(new_height)
                 db.commit()
 
         await asyncio.sleep(60)  # Wait for 1 minute
