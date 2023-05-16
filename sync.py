@@ -160,7 +160,6 @@ def create_new_transaction(
 
 async def sync_pair(
     pair: models.Pair,
-    check_if_height_exists
 ) -> [models.Pair, List[models.Transaction], List[models.HeightToTimestamp]]:
     new_transactions = []
     new_heights = []
@@ -221,13 +220,12 @@ async def sync_pair(
         )
         new_transactions.append(tx)
 
-        if not check_if_height_exists(height):
-            block_record = await client.get_block_record_by_height(height)
-            timestamp = block_record.timestamp if block_record is not None else None
-            new_heights.append(models.HeightToTimestamp(
-                height=height,
-                timestamp=int(timestamp if timestamp is not None else 0)
-            ))
+        block_record = await client.get_block_record_by_height(height)
+        timestamp = block_record.timestamp if block_record is not None else None
+        new_heights.append(models.HeightToTimestamp(
+            height=height,
+            timestamp=int(timestamp if timestamp is not None else 0)
+        ))
 
         pair.trade_volume = int(pair.trade_volume) + volume
         print(f"Volume of tx: {volume / 10 ** 12} XCH")

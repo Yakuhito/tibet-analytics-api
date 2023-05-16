@@ -48,7 +48,7 @@ async def router_and_pairs_sync_task():
 
         all_current_pairs = await api._get_pairs(db)
         for current_pair in all_current_pairs:
-            new_pair, new_transactions, new_heights = await sync.sync_pair(current_pair, check_if_height_exists)
+            new_pair, new_transactions, new_heights = await sync.sync_pair(current_pair)
             if new_pair is not None:
                 db.commit()
                 db.refresh(new_pair)
@@ -58,8 +58,9 @@ async def router_and_pairs_sync_task():
                 db.commit()
 
             for new_height in new_heights:
-                db.add(new_height)
-                db.commit()
+                if not check_if_height_exists(new_height.height):
+                    db.add(new_height)
+                    db.commit()
 
         await asyncio.sleep(60)  # Wait for 1 minute
 
