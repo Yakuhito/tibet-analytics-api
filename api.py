@@ -24,18 +24,33 @@ async def get_router(db: Session = Depends(get_db)):
     return router
 
 
+def pair_to_json(pair: models.Pair):
+    return {
+        "launcher_id": pair.launcher_id,
+        "name": pair.name,
+        "short_name": pair.short_name,
+        "image_url": pair.image_url,
+        "asset_id": pair.asset_id,
+        "current_coin_id": pair.current_coin_id,
+        "xch_reserve": int(pair.xch_reserve),
+        "token_reserve": int(pair.token_reserve),
+        "liquidity": int(pair.liquidity),
+        "trade_volume": int(pair.trade_volume)
+    }
+
+
 @cached(cache)
 @app.get("/pairs")
 async def get_pairs(db: Session = Depends(get_db)):
     return await _get_pairs(db)
 
-async def _get_pairs(db: Session):
+async def _get_pairs(db: Session, wrap=True):
     pairs = (
         db.query(models.Pair)
         .order_by(models.Pair.xch_reserve.desc())
         .all()
     )
-    return pairs
+    return [pair_to_json(pair) for pair in pairs] if wrap else pairs
 
 
 @cached(cache)
@@ -44,7 +59,7 @@ async def get_pair(pair_launcher_id: str, db: Session = Depends(get_db)):
     pair = db.query(models.Pair).filter(models.Pair.launcher_id == pair_launcher_id).first()
     if pair is None:
         raise HTTPException(status_code=404, detail="Pair not found")
-    return pair
+    return pair_to_json(pair)
 
 
 @cached(cache)
