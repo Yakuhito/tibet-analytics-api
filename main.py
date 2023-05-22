@@ -65,11 +65,14 @@ async def router_and_pairs_sync_task():
 
         await asyncio.sleep(60)  # Wait for 1 minute
 
-@app.on_event("startup")
-async def startup_event():
+async def router_and_pairs_sync_task_retry():
     while True:
         try:
-            asyncio.create_task(router_and_pairs_sync_task())
+            await router_and_pairs_sync_task()
         except:
             time.sleep(60)
             pass
+
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(router_and_pairs_sync_task_retry())
