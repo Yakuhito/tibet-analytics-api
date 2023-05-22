@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 
 import api, database, models, sync
 import asyncio
+import time
 import os
 
 if os.environ.get("TIBET_NETWORK") is None:
@@ -66,4 +67,9 @@ async def router_and_pairs_sync_task():
 
 @app.on_event("startup")
 async def startup_event():
-    asyncio.create_task(router_and_pairs_sync_task())
+    while True:
+        try:
+            asyncio.create_task(router_and_pairs_sync_task())
+        except:
+            time.sleep(60)
+            pass
