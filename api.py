@@ -3,7 +3,7 @@ from sqlalchemy import desc, func, BigInteger
 from cachetools import cached, TTLCache
 from sqlalchemy.orm import Session
 from typing import List, Optional
-import models, database
+import models, database, puzzle_hashes
 import os
 
 app = APIRouter()
@@ -51,6 +51,20 @@ async def _get_pairs(db: Session, wrap=True):
         .all()
     )
     return [pair_to_json(pair) for pair in pairs] if wrap else pairs
+
+@cached(cache)
+@app.get("/pair-puzzle-hashes")
+async def get_pair_puzzle_hashes(db: Session = Depends(get_db)):
+    pairs = await _get_pairs(db, wrap=False)
+    response = {
+        "warning": "Do *NOT* send any assets to these addresses - they will be lost forever",
+        "info": []
+    }
+
+    for pair in pairs:
+        response["info"].append(puzzle_hashes.get_pair_puzzle_hash_info(pair))
+    
+    return response
 
 
 @cached(cache)

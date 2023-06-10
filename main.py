@@ -11,7 +11,8 @@ import os
 if os.environ.get("TIBET_NETWORK") is None:
     load_dotenv()
 
-app = FastAPI(title="TibetSwap Analytics API", description="Analytics for TibetSwap v1", version="1.0.0")
+app = FastAPI(title="TibetSwap Analytics API", description="Analytics for TibetSwap v2", version="1.0.0")
+stop_event = asyncio.Event()
 
 # CORS
 app.add_middleware(
@@ -66,13 +67,27 @@ async def router_and_pairs_sync_task():
         await asyncio.sleep(60)  # Wait for 1 minute
 
 async def router_and_pairs_sync_task_retry():
-    while True:
+    while not stop_event.is_set():
         try:
             await router_and_pairs_sync_task()
         except:
-            time.sleep(60)
-            pass
+            for i in range(120):
+                if stop_event.is_set(): 
+                    break
+                time.sleep(0.5)
+
+
+def handle_task_result(task):
+    if task.exception():
+        os._exit(1)
+
 
 @app.on_event("startup")
 async def startup_event():
-    asyncio.create_task(router_and_pairs_sync_task_retry())
+    task = asyncio.create_task(router_and_pairs_sync_task_retry())
+    task.add_done_callback(handle_task_result)
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    stop_event.set()
