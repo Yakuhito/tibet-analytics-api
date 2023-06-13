@@ -8,6 +8,7 @@ from chia.types.blockchain_format.coin import Coin
 from typing import List
 import requests
 import models
+import time
 import sys
 import os
 
@@ -222,6 +223,11 @@ async def sync_pair(
 
         block_record = await client.get_block_record_by_height(height)
         timestamp = block_record.timestamp if block_record is not None else None
+        while timestamp is None or timestamp == 0:
+            time.sleep(5)
+            block_record = await client.get_block_record_by_height(height)
+            timestamp = block_record.timestamp if block_record is not None else None
+
         new_heights.append(models.HeightToTimestamp(
             height=height,
             timestamp=int(timestamp if timestamp is not None else 0)
