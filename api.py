@@ -190,7 +190,7 @@ async def get_24h_stats(db: Session = Depends(get_db)):
         else:
             for transaction in transactions:
                 trade_volume += abs(transaction.state_change["xch"])
-                xch_per_token_vwap -= transaction.state_change["xch"] * transaction.state_change["xch"] / transaction.state_change["token"]
+                xch_per_token_vwap += abs(transaction.state_change["xch"]) * abs(transaction.state_change["xch"]) / abs(transaction.state_change["token"])
         
             xch_per_token_vwap /= trade_volume
             total_trade_volume += trade_volume
