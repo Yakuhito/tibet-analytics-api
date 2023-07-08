@@ -3,7 +3,8 @@ from sqlalchemy import desc, func, BigInteger
 from cachetools import cached, TTLCache
 from sqlalchemy.orm import Session
 from typing import List, Optional
-import models, database, puzzle_hashes
+from datetime import datetime, timedelta
+import models, database, puzzle_hashes, time
 import os
 
 app = APIRouter()
@@ -155,6 +156,57 @@ async def get_stats(db: Session = Depends(get_db)):
         "total_value_locked": total_value_locked,
         "total_trade_volume": total_trade_volume,
     }
+
+
+@cached(cache)
+@app.get("/24h-stats")
+async def get_24h_stats(db: Session = Depends(get_db)):
+    # calculate the timestamp for 24 hours ago
+    current_time = datetime.now()
+    one_day_ago = current_time - timedelta(hours=24)
+    timestamp_24h_ago = int(time.mktime(one_day_ago.timetuple()))
+
+    item = db.query(models.HeightToTimestamp).filter(models.HeightToTimestamp.timestamp < timestamp_24h_ago).order_by(models.HeightToTimestamp.timestamp.desc()).first()
+
+    if item is None:
+        return {"error": "No data found for the last 24 hours."}
+
+    height = item.height
+    pairs = await _get_pairs(db, wrap=False)
+    total_trade_volume = 0
+
+    pair_info = []
+
+    for pair in pairs:
+        transactions = db.query(models.Transaction).filter(models.Transaction.pair_launcher_id == pair.launcher_id).filter(models.Transaction.operation == "SWAP").filter(models.Transaction.height > height).all()
+
+        trade_volume = 0
+        xch_per_token_vwap = 0
+
+        if len(transactions) == 0:
+            transaction = db.query(models.Transaction).filter(models.Transaction.pair_launcher_id == pair.launcher_id).filter(models.Transaction.operation == "SWAP").first()
+            if transaction is not None:
+                xch_per_token_vwap = - transaction.state_change["xch"] / transaction.state_change["token"]
+        else:
+            for transaction in transactions:
+                trade_volume += abs(transaction.state_change["xch"])
+                xch_per_token_vwap -= transaction.state_change["xch"] * transaction.state_change["xch"] / transaction.state_change["token"]
+        
+            xch_per_token_vwap /= trade_volume
+            total_trade_volume += trade_volume
+
+        pair_info.append({
+            "launcher_id": pair.launcher_id,
+            "asset_id": pair.asset_id,
+            "trade_volume": trade_volume,
+            "xch_per_token_vwap": xch_per_token_vwap
+        })
+
+    return {
+        "total_trade_volume": total_trade_volume,
+        "pair_info": pair_info
+    }
+
 
 
 @app.get("/")
