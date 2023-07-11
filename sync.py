@@ -126,6 +126,13 @@ def state_to_token_reserve(state: Program) -> int:
 def state_to_liquidity(state: Program) -> int:
     return state.at("f").as_int()
 
+def state_to_dict(state: Program):
+    return {
+        "xch": state_to_xch_reserve(state),
+        "token": state_to_token_reserve(state),
+        "liquidity": state_to_liquidity(state)
+    }
+
 def create_new_transaction(
     coin_id: str,
     pair_coin_id: str,
@@ -153,6 +160,7 @@ def create_new_transaction(
         pair_launcher_id = pair_coin_id,
         operation = operation,
         state_change = state_change,
+        new_state = state_to_dict(new_state),
         height = height,
     )
 

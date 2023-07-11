@@ -30,6 +30,7 @@ class Transaction(database.Base):
     pair_launcher_id = Column(String(64))
     operation = Column(String)
     state_change = Column(JSON)
+    new_state = Column(JSON)
     height = Column(BigInteger)
 
 
