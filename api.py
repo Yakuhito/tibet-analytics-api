@@ -129,7 +129,7 @@ async def get_transactions(
         query = query.filter(models.Transaction.pair_tx_index > after_index)
 
     transactions = (
-        query.order_by(desc(models.Transaction.pair_tx_index))
+        query.order_by(desc(models.Transaction.height))
         .limit(limit)
         .offset(offset)
         .all()
