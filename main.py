@@ -72,7 +72,7 @@ async def router_and_pairs_sync_task_retry():
             await router_and_pairs_sync_task()
         except:
             for i in range(120):
-                if stop_event.is_set(): 
+                if stop_event.is_set():
                     break
                 time.sleep(0.5)
 

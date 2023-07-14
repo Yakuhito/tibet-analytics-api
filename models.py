@@ -22,6 +22,7 @@ class Pair(database.Base):
     token_reserve = Column(BigInteger)
     liquidity = Column(BigInteger)
     trade_volume = Column(String, default="0")
+    last_tx_index = Column(BigInteger, default=-1)
 
 class Transaction(database.Base):
     __tablename__ = 'transactions'
@@ -32,6 +33,7 @@ class Transaction(database.Base):
     state_change = Column(JSON)
     new_state = Column(JSON)
     height = Column(BigInteger)
+    pair_tx_index = Column(BigInteger)
 
 
 class HeightToTimestamp(database.Base):

@@ -63,6 +63,7 @@ def create_new_pair(asset_id: str, launcher_id: str) -> models.Pair:
         token_reserve = 0,
         liquidity = 0,
         trade_volume = 0,
+        last_tx_index = -1,
     )
 
 
@@ -139,6 +140,7 @@ def create_new_transaction(
     old_state: Program,
     new_state: Program,
     height: int,
+    index: int,
 ) -> [models.Transaction, int]:
     state_change = {
         "xch": state_to_xch_reserve(new_state) - state_to_xch_reserve(old_state),
@@ -162,6 +164,7 @@ def create_new_transaction(
         state_change = state_change,
         new_state = state_to_dict(new_state),
         height = height,
+        pair_tx_index = index,
     )
 
     trade_volume = abs(state_change["xch"]) if operation == "SWAP" else 0
@@ -225,7 +228,8 @@ async def sync_pair(
             current_pair_coin_id.hex(),
             pair.launcher_id,
             old_state, new_state,
-            height
+            height,
+            int(pair.last_tx_index) + 1,
         )
         new_transactions.append(tx)
 
@@ -242,6 +246,7 @@ async def sync_pair(
         ))
 
         pair.trade_volume = int(pair.trade_volume) + volume
+        pair.last_tx_index = int(pair.last_tx_index) + 1
         print(f"Volume of tx: {volume / 10 ** 12} XCH")
 
         for cwa in conditions_dict.get(ConditionOpcode.CREATE_COIN, []):

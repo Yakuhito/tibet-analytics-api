@@ -86,6 +86,8 @@ async def get_transactions(
     after_height: Optional[int] = None,
     before_timestamp: Optional[int] = None,
     after_timestamp: Optional[int] = None,
+    before_index: Optional[int] = None,
+    after_index: Optional[int] = None,
     limit: int = 42,
     offset: int = 0,
     db: Session = Depends(get_db)
@@ -120,8 +122,14 @@ async def get_transactions(
     if after_timestamp:
         query = query.filter(models.HeightToTimestamp.timestamp > after_timestamp)
 
+    if before_index:
+        query = query.filter(models.Transaction.pair_tx_index < before_index)
+
+    if after_index:
+        query = query.filter(models.Transaction.pair_tx_index > after_index)
+
     transactions = (
-        query.order_by(desc(models.Transaction.height))
+        query.order_by(desc(models.Transaction.pair_tx_index))
         .limit(limit)
         .offset(offset)
         .all()
