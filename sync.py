@@ -31,6 +31,8 @@ def ensure_client():
         print("Unknown TIBET_NETWORK")
         sys.exit(1)
 
+    if 'http' in api_key:
+        url = api_key
     client = LeafletFullNodeRpcClient(url)
 
 
