@@ -44,7 +44,7 @@ def create_new_pair(asset_id: str, launcher_id: str) -> models.Pair:
     try:
         token_data = requests.get(os.environ.get("DEXIE_TOKEN_URL") + asset_id).json()
         if token_data["success"]:
-             print(f"Token 0x{asset_id} imported from Dexie")
+            print(f"Token 0x{asset_id} imported from Dexie")
             name = token_data["token"]["name"]
             short_name = token_data["token"]["code"]
             image_url = token_data["token"]["icon"]
