@@ -42,16 +42,20 @@ def create_new_pair(asset_id: str, launcher_id: str) -> models.Pair:
     image_url = "https://bafybeigzcazxeu7epmm4vtkuadrvysv74lbzzbl2evphtae6k57yhgynp4.ipfs.dweb.link/9098.gif"
 
     try:
-        url = os.environ.get("TAILDATABASE_TAIL_INFO_URL") + asset_id
-        resp = requests.get(url)
-        j = resp.json()
-        if j.get("error") == "Not found":
-            raise Exception("TailDatabase: Asset id not found")
-
-        name = j["name"]
-        short_name = j["code"]
-        image_url = j["nft_uri"]
+        token_data = requests.get(os.environ.get("DEXIE_TOKEN_URL") + asset_id).json()
+        if token_data["success"]:
+             print(f"Token 0x{asset_id} imported from Dexie")
+            name = token_data["token"]["name"]
+            short_name = token_data["token"]["code"]
+            image_url = token_data["token"]["icon"]
+        else:
+            print(f"Importing token 0x{asset_id} from SpaceScan")
+            token_data = requests.get(os.environ.get("SPACESCAN_TOKEN_URL") + asset_id).json()
+            name = token_data["info"]["name"]
+            short_name = token_data["info"]["symbol"]
+            image_url = token_data["info"]["preview_url"]
     except:
+        print("Exception :(")
         pass
 
     return models.Pair(
