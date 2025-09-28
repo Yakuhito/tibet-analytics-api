@@ -7,7 +7,7 @@ class Router(database.Base):
 
     launcher_id = Column(String(64), primary_key=True, unique=True)
     current_coin_id = Column(String(64))
-    network = Column(String)
+    rcat = Column(Boolean)
 
 class Pair(database.Base):
     __tablename__ = 'pairs'
@@ -17,6 +17,7 @@ class Pair(database.Base):
     short_name = Column(String)
     image_url = Column(String)
     asset_id = Column(String(64))
+    inverse_fee = Column(BigInteger)
     current_coin_id = Column(String(64))
     xch_reserve = Column(BigInteger)
     token_reserve = Column(BigInteger)

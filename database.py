@@ -19,15 +19,26 @@ def init_db():
     # Create database tables
     Base.metadata.create_all(bind=engine)
 
-    # Check if a router object exists, and if not, create one
-    router_exists = session.query(models.Router).first()
+    # Normal router
+    router_exists = session.query(models.Router).filter(models.Router.rcat == False).first()
     if not router_exists:
         router = models.Router(
             launcher_id=router_launcher_id,
             current_coin_id=router_launcher_id,
-            network="will remove this field"
+            rcat=False
         )
         session.add(router)
+        session.commit()
+
+    # rCAT router
+    rcat_router_exists = session.query(models.Router).filter(models.Router.rcat == True).first()
+    if not rcat_router_exists:
+        rcat_router = models.Router(
+            launcher_id=rcat_router_launcher_id,
+            current_coin_id=rcat_router_launcher_id,
+            rcat=True
+        )
+        session.add(rcat_router)
         session.commit()
 
     session.close()
