@@ -21,7 +21,7 @@ puzzle_hash_cache = {}
 
 def get_pair_puzzle_hash_info(pair):
     pair_launcher_id = pair.launcher_id
-    tail_hash = pair.asset_id
+    tail_hash = bytes.fromhex(pair.asset_id)
 
     cached = puzzle_hash_cache.get(pair_launcher_id, -1)
     if cached != -1:
@@ -48,8 +48,14 @@ def get_pair_puzzle_hash_info(pair):
     info["address"] = encode_puzzle_hash(p2_singleton_flashloan_puzzle_hash, prefix)
 
     cat_p2_singleton_flashloan_puzzle = construct_cat_puzzle(CAT_MOD, tail_hash, p2_singleton_flashloan_puzzle)
+    if pair.hidden_puzzle_hash is not None and len(pair.hidden_puzzle_hash) == 64:
+        cat_p2_singleton_flashloan_puzzle = construct_cat_puzzle(
+            CAT_MOD,
+            tail_hash,
+            create_revocation_layer(bytes.fromhex(pair.hidden_puzzle_hash), p2_singleton_flashloan_puzzle_hash)
+        )
     cat_p2_singleton_flashloan_puzzle_hash = cat_p2_singleton_flashloan_puzzle.get_tree_hash()
-    info["cat_puzzle_hash"] = cat_p2_singleton_flashloan_puzzle_hash.hex()
+    info["cat_full_puzzle_hash"] = cat_p2_singleton_flashloan_puzzle_hash.hex()
 
     puzzle_hash_cache[pair_launcher_id] = info
     return info

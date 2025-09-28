@@ -20,8 +20,8 @@ def get_db():
 
 @cached(cache)
 @app.get("/router")
-async def get_router(db: Session = Depends(get_db)):
-    router = db.query(models.Router).first()
+async def get_router(rcat: bool = False, db: Session = Depends(get_db)):
+    router = db.query(models.Router).filter(models.Router.rcat == rcat).first()
     return router
 
 
@@ -32,6 +32,8 @@ def pair_to_json(pair: models.Pair):
         "short_name": pair.short_name,
         "image_url": pair.image_url,
         "asset_id": pair.asset_id,
+        "hidden_puzzle_hash": pair.hidden_puzzle_hash,
+        "inverse_fee": int(pair.inverse_fee),
         "current_coin_id": pair.current_coin_id,
         "xch_reserve": int(pair.xch_reserve),
         "token_reserve": int(pair.token_reserve),

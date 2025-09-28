@@ -17,6 +17,7 @@ class Pair(database.Base):
     short_name = Column(String)
     image_url = Column(String)
     asset_id = Column(String(64))
+    hidden_puzzle_hash = Column(String(64))
     inverse_fee = Column(BigInteger)
     current_coin_id = Column(String(64))
     xch_reserve = Column(BigInteger)
