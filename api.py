@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy import desc, func, BigInteger
-from cachetools import cached, TTLCache
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime, timedelta
@@ -8,7 +7,6 @@ import models, database, puzzle_hashes, time
 import os
 
 app = APIRouter()
-cache = TTLCache(maxsize=100, ttl=10)
 
 # Dependency for getting DB session
 def get_db():
@@ -18,7 +16,6 @@ def get_db():
     finally:
         db.close()
 
-@cached(cache)
 @app.get("/router")
 async def get_router(rcat: bool = False, db: Session = Depends(get_db)):
     router = db.query(models.Router).filter(models.Router.rcat == rcat).first()
@@ -42,7 +39,6 @@ def pair_to_json(pair: models.Pair):
     }
 
 
-@cached(cache)
 @app.get("/pairs")
 async def get_pairs(db: Session = Depends(get_db)):
     return await _get_pairs(db)
@@ -55,7 +51,6 @@ async def _get_pairs(db: Session, wrap=True):
     )
     return [pair_to_json(pair) for pair in pairs] if wrap else pairs
 
-@cached(cache)
 @app.get("/pair-puzzle-hashes")
 async def get_pair_puzzle_hashes(db: Session = Depends(get_db)):
     pairs = await _get_pairs(db, wrap=False)
@@ -70,7 +65,6 @@ async def get_pair_puzzle_hashes(db: Session = Depends(get_db)):
     return response
 
 
-@cached(cache)
 @app.get("/pair/{pair_launcher_id}")
 async def get_pair(pair_launcher_id: str, db: Session = Depends(get_db)):
     pair = db.query(models.Pair).filter(models.Pair.launcher_id == pair_launcher_id).first()
@@ -79,7 +73,6 @@ async def get_pair(pair_launcher_id: str, db: Session = Depends(get_db)):
     return pair_to_json(pair)
 
 
-@cached(cache)
 @app.get("/transactions")
 async def get_transactions(
     pair_launcher_id: Optional[str] = None,
@@ -153,7 +146,6 @@ async def get_transactions(
     return transactions
 
 
-@cached(cache)
 @app.get("/stats")
 async def get_stats(db: Session = Depends(get_db)):
     # Number of transactions
@@ -176,7 +168,6 @@ async def get_stats(db: Session = Depends(get_db)):
     }
 
 
-@cached(cache)
 @app.get("/24h-stats")
 async def get_24h_stats(db: Session = Depends(get_db)):
     # calculate the timestamp for 24 hours ago
