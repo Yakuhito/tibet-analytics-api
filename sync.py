@@ -231,7 +231,12 @@ async def sync_pair(
 
         # for a particular pair, the puzzle run throug p2_merkle_root
         # returns the new state as the first element!
-        old_state = creation_spend.puzzle_reveal.uncurry()[1].at("rf").uncurry()[1].at("rrf")
+        try:
+        old_state = creation_spend.puzzle_reveal.uncurry()[1].at("rf").uncurry()[
+                1].at("rrf")
+        except:
+            old_state = Program.from_bytes(creation_spend.puzzle_reveal.to_bytes()).uncurry()[1].at("rf").uncurry()[
+                1].at("rrf")
         p2_merkle_solution = creation_spend.solution.to_program().at("rrf")
         new_state_puzzle = p2_merkle_solution.at("f") # p2_merkle_tree_modified -> parameters (which is a puzzle)
         params = p2_merkle_solution.at("rrf").at("r")
