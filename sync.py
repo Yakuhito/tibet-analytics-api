@@ -86,6 +86,8 @@ async def sync_router(router: models.Router) -> [models.Router, List[models.Pair
         return None, []
 
     while router_coin_record.spent:
+        tail_hash, hidden_puzzle_hash, inverse_fee = None, None, 993
+
         print(f"Processing router coin spend {current_router_coin_id.hex()}...")
         creation_spend = await client.get_puzzle_and_solution(
             current_router_coin_id,
@@ -100,9 +102,21 @@ async def sync_router(router: models.Router) -> [models.Router, List[models.Pair
 
         tail_hash = None
         if router_coin_record.coin.puzzle_hash != SINGLETON_LAUNCHER_HASH:
-            solution_program = creation_spend.solution.to_program()
-            tail_hash = [_ for _ in solution_program.as_iter()][-1].as_python()[-1]
-            print(f"New pair for asset id 0x{tail_hash.hex()}")
+            solution_program = None
+            try:
+                solution_program = creation_spend.solution.to_program()
+            except:
+                solution_program = Program.from_bytes(creation_spend.solution.to_bytes())
+
+            if router.rcat:
+                tail_hash = solution_program.at("rrfrf").as_python()
+                hidden_puzzle_hash = solution_program.at("rrfrrf").as_python()
+                inverse_fee = solution_program.at("rrfrrrf").as_int()
+                print(f"New XCH-rCAT pair for asset id 0x{tail_hash.hex()} (hidden puzzle hash: 0x{hidden_puzzle_hash}; inverse fee: {inverse_fee})")
+            else:
+                tail_hash = [_ for _ in solution_program.as_iter()
+                             ][-1].as_python()[-1]
+                print(f"New XCH-CAT pair for asset id 0x{tail_hash.hex()}")
 
         for cwa in conditions_dict[ConditionOpcode.CREATE_COIN]:
             new_puzzle_hash = cwa.vars[0]
@@ -118,8 +132,14 @@ async def sync_router(router: models.Router) -> [models.Router, List[models.Pair
                 pair_launcher_coin = Coin(creation_spend.coin.name(), new_puzzle_hash, 2)
                 pair_launcher_id = pair_launcher_coin.name()
                 
-                ###TODO: args update for create_new_pair
-                new_pairs.append(create_new_pair(pair_launcher_id.hex(), tail_hash.hex()))
+                new_pairs.append(
+                    create_new_pair(
+                        pair_launcher_id.hex(),
+                        tail_hash.hex(),
+                        hidden_puzzle_hash.hex() if hidden_puzzle_hash is not None else None,
+                        inverse_fee
+                    )
+                )
             else:
                 print("Someone did something extremely weird with the router - time to call the cops.")
                 sys.exit(1)
