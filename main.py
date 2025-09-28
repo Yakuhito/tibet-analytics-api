@@ -39,7 +39,7 @@ async def router_and_pairs_sync_task():
     db: Session = database.SessionLocal()
     while True:
         for rcat in [False, True]:
-            current_router = await api.get_router(db, rcat=rcat)
+            current_router = await api.get_router(rcat, db)
             new_router, new_pairs = await sync.sync_router(current_router)
             if new_router is not None:
                 db.commit()
@@ -71,7 +71,8 @@ async def router_and_pairs_sync_task_retry():
     while not stop_event.is_set():
         try:
             await router_and_pairs_sync_task()
-        except:
+        except Exception as e:
+            print(e)
             for i in range(120):
                 if stop_event.is_set():
                     break
