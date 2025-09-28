@@ -88,7 +88,7 @@ async def sync_router(router: models.Router) -> [models.Router, List[models.Pair
             router_coin_record.spent_block_index
         )
 
-        _, conditions_dict, __ = conditions_dict_for_solution(
+        conditions_dict = conditions_dict_for_solution(
             creation_spend.puzzle_reveal,
             creation_spend.solution,
             INFINITE_COST
@@ -206,7 +206,7 @@ async def sync_pair(
 
     if coin_record.coin.puzzle_hash == SINGLETON_LAUNCHER_HASH:
         creation_spend = await client.get_puzzle_and_solution(current_pair_coin_id, coin_record.spent_block_index)
-        _, conditions_dict, __ = conditions_dict_for_solution(
+        conditions_dict = conditions_dict_for_solution(
             creation_spend.puzzle_reveal,
             creation_spend.solution,
             INFINITE_COST
@@ -223,7 +223,7 @@ async def sync_pair(
     while coin_record.spent:
         print(f"Processing pair coin spend {current_pair_coin_id.hex()}...")
         creation_spend = await client.get_puzzle_and_solution(current_pair_coin_id, coin_record.spent_block_index)
-        _, conditions_dict, __ = conditions_dict_for_solution(
+        conditions_dict = conditions_dict_for_solution(
             creation_spend.puzzle_reveal,
             creation_spend.solution,
             INFINITE_COST
