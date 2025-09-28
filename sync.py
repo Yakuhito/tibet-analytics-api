@@ -26,7 +26,12 @@ def ensure_client():
 
     client = HttpFullNodeRpcClient(coinset_url)
 
-def create_new_pair(asset_id: str, launcher_id: str) -> models.Pair:
+def create_new_pair(
+    launcher_id: str,
+    asset_id: str,
+    hidden_puzzle_hash: str,
+    inverse_fee: int,
+) -> models.Pair:
     name = f"CAT 0x{asset_id[:8]}"
     short_name = "???"
     image_url = "https://bafybeigzcazxeu7epmm4vtkuadrvysv74lbzzbl2evphtae6k57yhgynp4.ipfs.dweb.link/9098.gif"
@@ -61,6 +66,8 @@ def create_new_pair(asset_id: str, launcher_id: str) -> models.Pair:
         short_name = short_name,
         image_url = image_url,
         asset_id = asset_id,
+        hidden_puzzle_hash = hidden_puzzle_hash,
+        inverse_fee = inverse_fee,
         current_coin_id = launcher_id,
         xch_reserve = 0,
         token_reserve = 0,
@@ -111,7 +118,8 @@ async def sync_router(router: models.Router) -> [models.Router, List[models.Pair
                 pair_launcher_coin = Coin(creation_spend.coin.name(), new_puzzle_hash, 2)
                 pair_launcher_id = pair_launcher_coin.name()
                 
-                new_pairs.append(create_new_pair(tail_hash.hex(), pair_launcher_id.hex()))
+                ###TODO: args update for create_new_pair
+                new_pairs.append(create_new_pair(pair_launcher_id.hex(), tail_hash.hex()))
             else:
                 print("Someone did something extremely weird with the router - time to call the cops.")
                 sys.exit(1)
