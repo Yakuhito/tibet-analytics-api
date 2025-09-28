@@ -14,27 +14,17 @@ import os
 
 client: HttpFullNodeRpcClient = None
 
+coinset_url = os.environ.get("COINSET_URL")
+dexie_token_url = os.environ.get("DEXIE_TOKEN_URL")
+tibetswap_token_url = os.environ.get("TIBETSWAP_TOKEN_URL")
+spacescan_token_url = os.environ.get("SPACESCAN_TOKEN_URL")
+
 def ensure_client():
     global client
     if client is not None:
         return
 
-    network = os.environ.get("TIBET_NETWORK")
-    api_key = os.environ.get("FIREACADEMYIO_API_KEY")
-    url = f"https://kraken.fireacademy.io/{api_key}/leaflet"
-
-    if network == "testnet10":
-        url += "-testnet10/"
-    elif network == "mainnet":
-        url += "/"
-    else:
-        print("Unknown TIBET_NETWORK")
-        sys.exit(1)
-
-    if 'http' in api_key:
-        url = api_key
-    client = HttpFullNodeRpcClient(url)
-
+    client = HttpFullNodeRpcClient(coinset_url)
 
 def create_new_pair(asset_id: str, launcher_id: str) -> models.Pair:
     name = f"CAT 0x{asset_id[:8]}"
@@ -42,18 +32,25 @@ def create_new_pair(asset_id: str, launcher_id: str) -> models.Pair:
     image_url = "https://bafybeigzcazxeu7epmm4vtkuadrvysv74lbzzbl2evphtae6k57yhgynp4.ipfs.dweb.link/9098.gif"
 
     try:
-        token_data = requests.get(os.environ.get("DEXIE_TOKEN_URL") + asset_id).json()
+        token_data = requests.get(dexie_token_url + asset_id).json()
         if token_data["success"]:
             print(f"Token 0x{asset_id} imported from Dexie")
             name = token_data["token"]["name"]
             short_name = token_data["token"]["code"]
             image_url = token_data["token"]["icon"]
         else:
-            print(f"Importing token 0x{asset_id} from SpaceScan")
-            token_data = requests.get(os.environ.get("SPACESCAN_TOKEN_URL") + asset_id).json()
-            name = token_data["info"]["name"]
-            short_name = token_data["info"]["symbol"]
-            image_url = token_data["info"]["preview_url"]
+            token_data = requests.get(tibetswap_token_url + asset_id).json()
+            if len(token_data.get("asset_id", "")) == 64:
+                print(f"Importing token 0x{asset_id} from TibetSwap")
+                name = token_data["name"]
+                short_name = token_data["short_name"]
+                image_url = token_data["image_url"]
+            else:
+                print(f"Importing token 0x{asset_id} from SpaceScan")
+                token_data = requests.get(spacescan_token_url + asset_id).json()
+                name = token_data["info"]["name"]
+                short_name = token_data["info"]["symbol"]
+                image_url = token_data["info"]["preview_url"]
     except:
         print("Exception :(")
         pass

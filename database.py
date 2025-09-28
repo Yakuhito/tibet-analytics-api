@@ -10,6 +10,9 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
+router_launcher_id = os.environ.get("TIBET_V2_ROUTER_LAUNCHER_ID")
+rcat_router_launcher_id = os.environ.get("TIBET_V2R_ROUTER_LAUNCHER_ID")
+
 def init_db():
     session = SessionLocal()
 
@@ -20,9 +23,9 @@ def init_db():
     router_exists = session.query(models.Router).first()
     if not router_exists:
         router = models.Router(
-            launcher_id=os.environ.get("TIBET_LAUNCHER_ID"),
-            current_coin_id=os.environ.get("TIBET_LAUNCHER_ID"),
-            network=os.environ.get("TIBET_NETWORK")
+            launcher_id=router_launcher_id,
+            current_coin_id=router_launcher_id,
+            network="will remove this field"
         )
         session.add(router)
         session.commit()

@@ -32,7 +32,7 @@ def get_pair_puzzle_hash_info(pair):
     }
 
     prefix = "txch"
-    if os.environ.get("TIBET_NETWORK") == "mainnet":
+    if "testnet" not in os.environ.get("DEXIE_TOKEN_URL"):
         prefix = "xch"
 
     # p2_singleton_flashloan has 3 arguments that need to be curried in:

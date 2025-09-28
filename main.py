@@ -8,7 +8,7 @@ import asyncio
 import time
 import os
 
-if os.environ.get("TIBET_NETWORK") is None:
+if os.environ.get("COINSET_URL") is None:
     load_dotenv()
 
 app = FastAPI(title="TibetSwap Analytics API", description="Analytics for TibetSwap v2 & v2r", version="2.0.0")
