@@ -1,13 +1,15 @@
 # Use the official Python base image
-FROM python:3.9
+FROM python:3.12
 
 # Set the working directory
 WORKDIR /app
 
-# Copy the requirements.txt file into the container
-COPY requirements.txt .
+# Create and activate a virtual environment
+RUN python -m venv venv
+RUN /bin/bash -c "source venv/bin/activate"
 
-# Install the dependencies
+# Install requirements from requirements.txt
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code
