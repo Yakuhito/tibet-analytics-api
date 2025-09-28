@@ -1,4 +1,5 @@
 from chia.wallet.puzzles.singleton_top_layer_v1_1 import SINGLETON_MOD_HASH, SINGLETON_LAUNCHER_HASH
+from chia.wallet.vc_wallet.vc_drivers import create_revocation_layer
 from chia.wallet.cat_wallet.cat_utils import construct_cat_puzzle
 from chia.types.blockchain_format.program import Program
 from chia.wallet.cat_wallet.cat_utils import CAT_MOD
