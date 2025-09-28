@@ -3,7 +3,7 @@ from chia.util.condition_tools import conditions_dict_for_solution
 from chia.types.blockchain_format.program import INFINITE_COST
 from chia.types.condition_opcodes import ConditionOpcode
 from chia.types.blockchain_format.program import Program
-from leaflet_client import LeafletFullNodeRpcClient
+from rpc_client import HttpFullNodeRpcClient
 from chia.types.blockchain_format.coin import Coin
 from typing import List
 import requests
@@ -12,7 +12,7 @@ import time
 import sys
 import os
 
-client: LeafletFullNodeRpcClient = None
+client: HttpFullNodeRpcClient = None
 
 def ensure_client():
     global client
@@ -33,7 +33,7 @@ def ensure_client():
 
     if 'http' in api_key:
         url = api_key
-    client = LeafletFullNodeRpcClient(url)
+    client = HttpFullNodeRpcClient(url)
 
 
 def create_new_pair(asset_id: str, launcher_id: str) -> models.Pair:
