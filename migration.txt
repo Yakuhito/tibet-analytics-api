@@ -1,0 +1,18 @@
+To migrate from a v1 to a v2 database while preserving data, run the following queries:
+
+```sql
+-- Add new columns to the pairs table
+ALTER TABLE pairs ADD COLUMN hidden_puzzle_hash VARCHAR(64);
+ALTER TABLE pairs ADD COLUMN inverse_fee BIGINT;
+
+-- Set default values for existing pairs
+UPDATE pairs SET hidden_puzzle_hash = '' WHERE hidden_puzzle_hash IS NULL;
+UPDATE pairs SET inverse_fee = 993 WHERE inverse_fee IS NULL;
+
+-- Remove the network column from router table and add rcat column
+ALTER TABLE router DROP COLUMN network;
+ALTER TABLE router ADD COLUMN rcat BOOLEAN;
+
+-- Set default value for rcat (assuming false for existing routers)
+UPDATE router SET rcat = false WHERE rcat IS NULL;
+```
