@@ -130,3 +130,6 @@ dmypy.json
 
 # database
 database.db
+
+# Added by yak
+nginx.conf
