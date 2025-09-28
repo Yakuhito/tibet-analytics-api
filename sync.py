@@ -1,10 +1,10 @@
 from chia.wallet.puzzles.singleton_top_layer_v1_1 import SINGLETON_LAUNCHER_HASH
-from chia.util.condition_tools import conditions_dict_for_solution
+from chia.consensus.condition_tools import conditions_dict_for_solution
 from chia.types.blockchain_format.program import INFINITE_COST
 from chia.types.condition_opcodes import ConditionOpcode
 from chia.types.blockchain_format.program import Program
 from rpc_client import HttpFullNodeRpcClient
-from chia.types.blockchain_format.coin import Coin
+from chia_rs import Coin
 from typing import List
 import requests
 import models

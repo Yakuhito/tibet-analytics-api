@@ -1,18 +1,13 @@
 from chia.wallet.puzzles.singleton_top_layer_v1_1 import SINGLETON_MOD_HASH, SINGLETON_LAUNCHER_HASH
 from chia.wallet.cat_wallet.cat_utils import construct_cat_puzzle
 from chia.types.blockchain_format.program import Program
-from chia.wallet.puzzles.cat_loader import CAT_MOD
+from chia.wallet.cat_wallet.cat_utils import CAT_MOD
 from chia.util.bech32m import encode_puzzle_hash
 import os
 
-try:
-    from chia.types.blockchain_format.serialized_program import SerializedProgram
-except:
-    from chia.types.blockchain_format.program import SerializedProgram
-
 
 def program_from_hex(h: str) -> Program:
-    return SerializedProgram.from_bytes(bytes.fromhex(h)).to_program()
+    return Program.from_bytes(bytes.fromhex(h))
 
 
 # https://github.com/Yakuhito/tibet/blob/master/clvm/p2_singleton_flashloan.clvm.hex
