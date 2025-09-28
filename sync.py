@@ -106,7 +106,7 @@ async def sync_router(router: models.Router) -> [models.Router, List[models.Pair
                 tail_hash = solution_program.at("rrfrf").as_python()
                 hidden_puzzle_hash = solution_program.at("rrfrrf").as_python()
                 inverse_fee = solution_program.at("rrfrrrf").as_int()
-                print(f"New XCH-rCAT pair for asset id 0x{tail_hash.hex()} (hidden puzzle hash: 0x{hidden_puzzle_hash}; inverse fee: {inverse_fee})")
+                print(f"New XCH-rCAT pair for asset id 0x{tail_hash.hex()} (hidden puzzle hash: 0x{hidden_puzzle_hash.hex()}; inverse fee: {inverse_fee})")
             else:
                 tail_hash = [_ for _ in solution_program.as_iter()
                              ][-1].as_python()[-1]
