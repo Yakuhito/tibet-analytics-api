@@ -1,5 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy import desc, func, BigInteger
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -8,14 +7,6 @@ import models, database, puzzle_hashes, time
 import os
 
 app = APIRouter()
-
-fa = FastAPI(title="TibetSwap Analytics API", description="Analytics for TibetSwap v2 & v2r", version="2.0.0")
-fa.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # Dependency for getting DB session
 def get_db():
