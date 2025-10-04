@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import desc, func, BigInteger
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -7,6 +8,13 @@ import models, database, puzzle_hashes, time
 import os
 
 app = APIRouter()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Dependency for getting DB session
 def get_db():
