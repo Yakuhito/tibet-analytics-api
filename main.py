@@ -1,4 +1,3 @@
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
@@ -13,15 +12,6 @@ if os.environ.get("COINSET_URL") is None:
 
 app = FastAPI(title="TibetSwap Analytics API", description="Analytics for TibetSwap v2 & v2r", version="2.0.0")
 stop_event = asyncio.Event()
-
-# CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # Create database tables
 database.init_db()
