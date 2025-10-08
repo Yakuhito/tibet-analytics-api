@@ -147,7 +147,7 @@ def sync_prices(db: Session) -> int:
         
         for entry in price_entries:
             entry_time = entry.get("time")
-            if entry_time <= current_timestamp:
+            if entry_time < current_timestamp:
                 continue
             
             from_ts = entry_time
