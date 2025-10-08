@@ -87,14 +87,17 @@ def update_pair_usd_volumes_for_period(
             pair_volumes[pair_id] = 0
         pair_volumes[pair_id] += usd_volume_cents
     
+    total_updated_usd_volume = 0
     for pair_id, usd_volume in pair_volumes.items():
         pair = db.query(models.Pair).filter(
             models.Pair.launcher_id == pair_id
         ).first()
         if pair:
             pair.trade_volume_usd = str(int(pair.trade_volume_usd or 0) + usd_volume)
+            total_updated_usd_volume += usd_volume
     
     print(f"Updated USD volumes for {len(pair_volumes)} pairs in period {from_timestamp}-{to_timestamp}")
+    print(f"Total updated USD volume: {total_updated_usd_volume/100:.2f}")
 
 def sync_prices(db: Session) -> int:
     max_synced = get_max_synced_timestamp(db)
