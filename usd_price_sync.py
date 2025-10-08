@@ -157,7 +157,8 @@ def sync_prices(db: Session) -> int:
             from_ts = entry_time
             to_ts = entry_time + 3600
             if to_ts >= max_sync_timestamp:
-                continue
+                current_timestamp = max_sync_timestamp
+                break
 
             price_cents = calculate_average_price_cents(entry)
             

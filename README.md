@@ -1,5 +1,5 @@
 # TibetSwap Analytics API
 
 ```
-ghcr.io/yakuhito/tibetswap-analytics-api:2.0.7
+ghcr.io/yakuhito/tibetswap-analytics-api:2.0.8
 ```
