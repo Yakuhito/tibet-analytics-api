@@ -67,6 +67,7 @@ def create_new_pair(
         token_reserve = 0,
         liquidity = 0,
         trade_volume = 0,
+        trade_volume_usd = 0,
         last_tx_index = -1,
     )
 

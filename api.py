@@ -3,7 +3,7 @@ from sqlalchemy import desc, func, BigInteger
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime, timedelta
-import models, database, puzzle_hashes, time
+import models, database, puzzle_hashes, time, usd_price_sync
 import os
 
 app = APIRouter()
@@ -35,7 +35,8 @@ def pair_to_json(pair: models.Pair):
         "xch_reserve": int(pair.xch_reserve),
         "token_reserve": int(pair.token_reserve),
         "liquidity": int(pair.liquidity),
-        "trade_volume": int(pair.trade_volume)
+        "trade_volume": int(pair.trade_volume),
+        "trade_volume_usd": int(pair.trade_volume_usd or 0)
     }
 
 
@@ -161,10 +162,16 @@ async def get_stats(db: Session = Depends(get_db)):
         db.query(func.sum(func.cast(models.Pair.trade_volume, BigInteger))).scalar() or 0
     )
 
+    # Total trade volume in USD (sum of all Pairs' trade_volume_usd)
+    total_trade_volume_usd = (
+        db.query(func.sum(func.cast(models.Pair.trade_volume_usd, BigInteger))).scalar() or 0
+    )
+
     return {
         "transaction_count": transaction_count,
         "total_value_locked": total_value_locked,
         "total_trade_volume": total_trade_volume,
+        "total_trade_volume_usd": total_trade_volume_usd,
     }
 
 
@@ -183,6 +190,7 @@ async def get_24h_stats(db: Session = Depends(get_db)):
     height = item.height
     pairs = await _get_pairs(db, wrap=False)
     total_trade_volume = 0
+    total_trade_volume_usd = 0
 
     pair_info = []
 
@@ -190,6 +198,7 @@ async def get_24h_stats(db: Session = Depends(get_db)):
         transactions = db.query(models.Transaction).filter(models.Transaction.pair_launcher_id == pair.launcher_id).filter(models.Transaction.operation == "SWAP").filter(models.Transaction.height > height).all()
 
         trade_volume = 0
+        trade_volume_usd = 0
         xch_per_token_vwap = 0
 
         if len(transactions) == 0:

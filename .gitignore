@@ -133,3 +133,5 @@ database.db
 
 # Added by yak
 nginx.conf
+*.db
+*.png

@@ -16,3 +16,23 @@ ALTER TABLE router ADD COLUMN rcat BOOLEAN;
 -- Set default value for rcat (assuming false for existing routers)
 UPDATE router SET rcat = false WHERE rcat IS NULL;
 ```
+
+To add USD price tracking to an existing v2 database, run the following queries:
+
+```sql
+-- Add USD trade volume column to pairs table
+ALTER TABLE pairs ADD COLUMN trade_volume_usd VARCHAR DEFAULT '0';
+
+-- Set default value for existing pairs
+UPDATE pairs SET trade_volume_usd = '0' WHERE trade_volume_usd IS NULL;
+
+-- Create the average USD price table
+CREATE TABLE average_usd_price (
+    from_timestamp BIGINT PRIMARY KEY NOT NULL UNIQUE,
+    to_timestamp BIGINT NOT NULL,
+    price_cents BIGINT NOT NULL
+);
+
+-- Create index on to_timestamp for faster queries
+CREATE INDEX idx_average_usd_price_to_timestamp ON average_usd_price(to_timestamp);
+```
