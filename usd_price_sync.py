@@ -46,7 +46,8 @@ def get_max_synced_timestamp(db: Session) -> int:
     ).first()
     
     # TibetSwap v2 launched May 15th, 2023
-    return max_entry.to_timestamp if max_entry else 1684130400
+    # Timestamp expected to be ~1684130400
+    return max_entry.to_timestamp if max_entry else 0
 
 
 def get_price_for_timestamp(db: Session, timestamp: int) -> Optional[models.AverageUsdPrice]:
@@ -66,7 +67,6 @@ def update_pair_usd_volumes_for_period(
     Update USD volumes for all pairs that have SWAP transactions in the given period.
     This is called when a new price entry is inserted.
     """
-    # Get all transactions in this period
     transactions = db.query(models.Transaction).join(
         models.HeightToTimestamp,
         models.Transaction.height == models.HeightToTimestamp.height
@@ -76,20 +76,17 @@ def update_pair_usd_volumes_for_period(
         models.HeightToTimestamp.timestamp < to_timestamp
     ).all()
     
-    # Group by pair and calculate USD volume
     pair_volumes = {}
     for tx in transactions:
         pair_id = tx.pair_launcher_id
         xch_volume = abs(tx.state_change.get("xch", 0))
         
-        # Convert XCH volume to USD cents (xch_volume is in mojos, 1 XCH = 10^12 mojos)
         usd_volume_cents = (xch_volume * price_cents) // (10 ** 12)
         
         if pair_id not in pair_volumes:
             pair_volumes[pair_id] = 0
         pair_volumes[pair_id] += usd_volume_cents
     
-    # Update each pair's USD volume
     for pair_id, usd_volume in pair_volumes.items():
         pair = db.query(models.Pair).filter(
             models.Pair.launcher_id == pair_id
@@ -100,16 +97,10 @@ def update_pair_usd_volumes_for_period(
     print(f"Updated USD volumes for {len(pair_volumes)} pairs in period {from_timestamp}-{to_timestamp}")
 
 def sync_prices(db: Session) -> int:
-    """
-    Sync price data from CryptoCompare API.
-    Returns the maximum to_timestamp synced, or 0 if failed.
-    """
     max_synced = get_max_synced_timestamp(db)
     current_time = int(time.time())
     
-    # Determine the starting point
     if max_synced == 0:
-        # If no data exists, start from the earliest transaction
         earliest_height = db.query(models.HeightToTimestamp).order_by(
             models.HeightToTimestamp.timestamp.asc()
         ).first()
@@ -118,13 +109,10 @@ def sync_prices(db: Session) -> int:
             print("No transactions to sync prices for")
             return 0
         
-        # Round down to the nearest hour
         start_timestamp = (earliest_height.timestamp // 3600) * 3600
     else:
-        # Continue from where we left off
         start_timestamp = max_synced
     
-    # Don't sync data that's too recent (need at least 15 minutes for API to have data)
     max_sync_timestamp = ((current_time - 900) // 3600) * 3600
     
     if start_timestamp >= max_sync_timestamp:
@@ -133,17 +121,14 @@ def sync_prices(db: Session) -> int:
     
     print(f"Syncing prices from {start_timestamp} to {max_sync_timestamp}")
     
-    # Fetch data in batches (API limit is 2000, but we'll use smaller batches)
-    batch_size = 2000
+    batch_size = 1998 # max is 2000
     current_timestamp = start_timestamp
     synced_count = 0
     
     while current_timestamp < max_sync_timestamp:
-        # Calculate how many entries we need
         remaining = (max_sync_timestamp - current_timestamp) // 3600
         limit = min(batch_size, remaining)
         
-        # Fetch data
         to_ts = current_timestamp + (limit * 3600)
         print(f"Fetching {limit} price entries up to timestamp {to_ts}")
         
@@ -157,7 +142,6 @@ def sync_prices(db: Session) -> int:
             print("No price entries returned")
             break
         
-        # Process each price entry
         for entry in price_entries:
             entry_time = entry.get("time")
             if entry_time <= current_timestamp:
@@ -167,7 +151,6 @@ def sync_prices(db: Session) -> int:
             to_ts = entry_time + 3600
             price_cents = calculate_average_price_cents(entry)
             
-            # Check if this entry already exists
             existing = db.query(models.AverageUsdPrice).filter(
                 models.AverageUsdPrice.from_timestamp == from_ts
             ).first()
@@ -177,7 +160,6 @@ def sync_prices(db: Session) -> int:
                 current_timestamp = to_ts
                 continue
             
-            # Insert the new price entry
             new_price = models.AverageUsdPrice(
                 from_timestamp=from_ts,
                 to_timestamp=to_ts,
@@ -185,11 +167,17 @@ def sync_prices(db: Session) -> int:
             )
             db.add(new_price)
             
-            # Update USD volumes for pairs with transactions in this period
             update_pair_usd_volumes_for_period(db, from_ts, to_ts, price_cents)
             
-            # Commit the transaction
-            db.commit()
+            # Commit the transaction (price entry + USD volume updates together)
+            try:
+                db.commit()
+            except Exception as e:
+                print(f"Error committing price entry for {from_ts}: {e}")
+                db.rollback()
+                # Skip this entry and continue - it will be retried next time
+                current_timestamp = to_ts
+                continue
             
             synced_count += 1
             current_timestamp = to_ts
@@ -199,14 +187,9 @@ def sync_prices(db: Session) -> int:
     return current_timestamp
 
 def update_transaction_usd_volume(db: Session, transaction: models.Transaction):
-    """
-    Update the USD volume for a pair when a new transaction is added.
-    This checks if a price is available for the transaction's timestamp and updates accordingly.
-    """
     if transaction.operation != "SWAP":
         return
     
-    # Get the timestamp for this transaction
     height_entry = db.query(models.HeightToTimestamp).filter(
         models.HeightToTimestamp.height == transaction.height
     ).first()
@@ -215,18 +198,15 @@ def update_transaction_usd_volume(db: Session, transaction: models.Transaction):
         print(f"No timestamp found for height {transaction.height}")
         return
     
-    # Get the price for this timestamp
     price_entry = get_price_for_timestamp(db, height_entry.timestamp)
     
     if not price_entry:
         print(f"No price data available for timestamp {height_entry.timestamp}")
         return
     
-    # Calculate USD volume
     xch_volume = abs(transaction.state_change.get("xch", 0))
     usd_volume_cents = (xch_volume * price_entry.price_cents) // (10 ** 12)
     
-    # Update the pair's USD volume
     pair = db.query(models.Pair).filter(
         models.Pair.launcher_id == transaction.pair_launcher_id
     ).first()
