@@ -156,6 +156,9 @@ def sync_prices(db: Session) -> int:
             
             from_ts = entry_time
             to_ts = entry_time + 3600
+            if to_ts >= max_sync_timestamp:
+                continue
+
             price_cents = calculate_average_price_cents(entry)
             
             existing = db.query(models.AverageUsdPrice).filter(
