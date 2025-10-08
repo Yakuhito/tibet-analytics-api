@@ -12,6 +12,7 @@ sqlite3 database.db "SELECT SUM(CAST(trade_volume_usd AS INTEGER)) as total_trad
 
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+from matplotlib.ticker import ScalarFormatter
 from datetime import datetime
 from sqlalchemy import func
 import models, database
@@ -143,6 +144,11 @@ def create_graph(timestamps, cumulative_xch_volume, cumulative_usd_volume):
     ax1.tick_params(axis='y', labelcolor=color)
     ax1.grid(True, alpha=0.3)
     
+    # Disable scientific notation on XCH axis
+    formatter1 = ScalarFormatter(useOffset=False)
+    formatter1.set_scientific(False)
+    ax1.yaxis.set_major_formatter(formatter1)
+    
     # Format x-axis dates
     ax1.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
     ax1.xaxis.set_major_locator(mdates.MonthLocator(interval=2))
@@ -154,6 +160,11 @@ def create_graph(timestamps, cumulative_xch_volume, cumulative_usd_volume):
     ax2.set_ylabel('Cumulative Volume (USD)', color=color, fontsize=12)
     line2 = ax2.plot(timestamps, cumulative_usd_volume, color=color, linewidth=2, label='USD Volume')
     ax2.tick_params(axis='y', labelcolor=color)
+    
+    # Disable scientific notation on USD axis
+    formatter2 = ScalarFormatter(useOffset=False)
+    formatter2.set_scientific(False)
+    ax2.yaxis.set_major_formatter(formatter2)
     
     # Add title
     plt.title('TibetSwap Cumulative Trading Volume Over Time', fontsize=16, fontweight='bold', pad=20)
