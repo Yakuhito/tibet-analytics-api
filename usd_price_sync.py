@@ -14,7 +14,7 @@ def fetch_price_data(to_timestamp: int, limit: int = 1) -> Optional[dict]:
             "limit": limit,
             "toTs": to_timestamp
         }
-        response = requests.get(CRYPTOCOMPARE_API_URL, params=params, timeout=30)
+        response = requests.get(CRYPTOCOMPARE_API_URL, params=params, timeout=60)
         response.raise_for_status()
         
         data = response.json()
