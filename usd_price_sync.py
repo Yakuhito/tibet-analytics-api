@@ -97,7 +97,7 @@ def update_pair_usd_volumes_for_period(
             total_updated_usd_volume += usd_volume
     
     print(f"Updated USD volumes for {len(pair_volumes)} pairs in period {from_timestamp}-{to_timestamp}")
-    print(f"Total updated USD volume: {total_updated_usd_volume/100:.2f}")
+    print(f"USD volume delta: +${total_updated_usd_volume/100:.2f}")
 
 def sync_prices(db: Session) -> int:
     max_synced = get_max_synced_timestamp(db)
