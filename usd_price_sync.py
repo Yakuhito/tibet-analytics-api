@@ -133,6 +133,10 @@ def sync_prices(db: Session) -> int:
         limit = min(batch_size, remaining)
         
         to_ts = current_timestamp + (limit * 3600)
+
+        if to_ts >= max_sync_timestamp:
+            return current_timestamp
+
         print(f"Fetching {limit} price entries up to timestamp {to_ts}")
         
         data = fetch_price_data(to_ts, limit)
