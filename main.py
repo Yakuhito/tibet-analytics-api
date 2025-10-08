@@ -47,9 +47,12 @@ async def router_and_pairs_sync_task():
                 new_pair, new_transactions, new_heights = await sync.sync_pair(current_pair)
                 if new_pair is not None:
                     # Add all new heights first (they have primary key constraints)
+                    # Track which heights we've added in this batch to avoid duplicates
+                    added_heights = set()
                     for new_height in new_heights:
-                        if not check_if_height_exists(new_height.height):
+                        if new_height.height not in added_heights and not check_if_height_exists(new_height.height):
                             db.add(new_height)
+                            added_heights.add(new_height.height)
                     
                     # Add all transactions
                     for new_tx in new_transactions:
