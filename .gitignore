@@ -130,7 +130,8 @@ dmypy.json
 
 # database
 database.db
-*.db
 
 # Added by yak
 nginx.conf
+*.db
+*.png
