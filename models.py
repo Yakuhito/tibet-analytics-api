@@ -24,6 +24,7 @@ class Pair(database.Base):
     token_reserve = Column(BigInteger)
     liquidity = Column(BigInteger)
     trade_volume = Column(String, default="0")
+    trade_volume_usd = Column(String, default="0")
     last_tx_index = Column(BigInteger, default=-1)
 
 class Transaction(database.Base):
@@ -43,3 +44,10 @@ class HeightToTimestamp(database.Base):
 
     height = Column(BigInteger, primary_key=True, unique=True)
     timestamp = Column(BigInteger)
+
+class AverageUsdPrice(database.Base):
+    __tablename__ = 'average_usd_price'
+
+    from_timestamp = Column(BigInteger, primary_key=True, unique=True)
+    to_timestamp = Column(BigInteger)
+    price_cents = Column(BigInteger)
