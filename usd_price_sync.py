@@ -92,7 +92,7 @@ def update_pair_usd_volumes_for_period(
             models.Pair.launcher_id == pair_id
         ).first()
         if pair:
-            pair.trade_volume_usd = int(pair.trade_volume_usd or 0) + usd_volume
+            pair.trade_volume_usd = str(int(pair.trade_volume_usd or 0) + usd_volume)
     
     print(f"Updated USD volumes for {len(pair_volumes)} pairs in period {from_timestamp}-{to_timestamp}")
 
@@ -195,13 +195,13 @@ def update_transaction_usd_volume(db: Session, transaction: models.Transaction):
     ).first()
     
     if not height_entry:
-        print(f"No timestamp found for height {transaction.height}")
+        # print(f"No timestamp found for height {transaction.height}")
         return
     
     price_entry = get_price_for_timestamp(db, height_entry.timestamp)
     
     if not price_entry:
-        print(f"No price data available for timestamp {height_entry.timestamp}")
+        # print(f"No price data available for timestamp {height_entry.timestamp}")
         return
     
     xch_volume = abs(transaction.state_change.get("xch", 0))
@@ -212,6 +212,6 @@ def update_transaction_usd_volume(db: Session, transaction: models.Transaction):
     ).first()
     
     if pair:
-        pair.trade_volume_usd = int(pair.trade_volume_usd or 0) + usd_volume_cents
+        pair.trade_volume_usd = str(int(pair.trade_volume_usd or 0) + usd_volume_cents)
         print(f"Updated USD volume for pair {pair.launcher_id}: +${usd_volume_cents/100:.2f}")
 

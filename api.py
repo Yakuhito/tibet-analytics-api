@@ -171,7 +171,7 @@ async def get_stats(db: Session = Depends(get_db)):
         "transaction_count": transaction_count,
         "total_value_locked": total_value_locked,
         "total_trade_volume": total_trade_volume,
-        "total_trade_volume_usd": total_trade_volume_usd,
+        "total_trade_volume_usd": total_trade_volume_usd / 100.0,
     }
 
 
